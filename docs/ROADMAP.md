@@ -6,7 +6,7 @@ Planned improvements for OpenRouter Pricing Overlay.
 
 ### 1. Improved Badge Positioning
 **Priority:** High  
-**Status:** Planned
+**Status:** ✅ Complete (v0.1.0)
 
 Current badges appear after the link element, which can cause awkward spacing. Improve to:
 - Inline with model name (same line, tighter spacing)
@@ -22,7 +22,7 @@ Current badges appear after the link element, which can cause awkward spacing. I
 
 ### 2. Color-Coded Price Tiers
 **Priority:** High  
-**Status:** Planned
+**Status:** ✅ Complete (v0.1.0)
 
 Visual indication of relative cost at a glance:
 
