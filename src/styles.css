@@ -9,57 +9,89 @@
   font-size: 10px;
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-weight: 500;
-  background: rgba(59, 130, 246, 0.15);
-  border: none;
-  color: #93c5fd;
-  margin-left: 6px;
   white-space: nowrap;
   line-height: 1.4;
   letter-spacing: -0.01em;
+  margin-left: 6px;
+  cursor: help;
+  transition: background 0.15s ease;
 }
 
-.or-price-badge.free {
-  background: rgba(34, 197, 94, 0.15);
+/* Price tiers */
+.or-price-badge.tier-free {
+  background: rgba(34, 197, 94, 0.2);
   color: #4ade80;
 }
+.or-price-badge.tier-free:hover {
+  background: rgba(34, 197, 94, 0.35);
+}
 
+.or-price-badge.tier-cheap {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+.or-price-badge.tier-cheap:hover {
+  background: rgba(59, 130, 246, 0.35);
+}
+
+.or-price-badge.tier-mid {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+}
+.or-price-badge.tier-mid:hover {
+  background: rgba(234, 179, 8, 0.35);
+}
+
+.or-price-badge.tier-premium {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+}
+.or-price-badge.tier-premium:hover {
+  background: rgba(249, 115, 22, 0.35);
+}
+
+.or-price-badge.tier-frontier {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+.or-price-badge.tier-frontier:hover {
+  background: rgba(239, 68, 68, 0.35);
+}
+
+/* Price components */
 .or-price-badge .or-price-in {
-  color: #93c5fd;
+  opacity: 0.9;
 }
 
 .or-price-badge .or-price-out {
-  color: #fbbf24;
+  opacity: 0.9;
 }
 
 .or-price-badge .or-price-sep {
-  color: #6b7280;
+  opacity: 0.5;
   margin: 0 1px;
 }
 
-/* Tooltip on hover */
-.or-price-badge[title] {
-  cursor: help;
-}
-
-/* Subtle hover effect */
-.or-price-badge:hover {
-  background: rgba(59, 130, 246, 0.25);
-}
-
-.or-price-badge.free:hover {
-  background: rgba(34, 197, 94, 0.25);
-}
-
-/* Dark mode is default for OpenRouter; light mode fallback */
+/* Light mode fallback */
 @media (prefers-color-scheme: light) {
-  .or-price-badge {
-    background: rgba(59, 130, 246, 0.12);
+  .or-price-badge.tier-free {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+  }
+  .or-price-badge.tier-cheap {
+    background: rgba(59, 130, 246, 0.15);
     color: #2563eb;
   }
-  .or-price-badge .or-price-in {
-    color: #1d4ed8;
+  .or-price-badge.tier-mid {
+    background: rgba(234, 179, 8, 0.15);
+    color: #ca8a04;
   }
-  .or-price-badge .or-price-out {
-    color: #d97706;
+  .or-price-badge.tier-premium {
+    background: rgba(249, 115, 22, 0.15);
+    color: #ea580c;
+  }
+  .or-price-badge.tier-frontier {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
   }
 }

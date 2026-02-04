@@ -18,18 +18,28 @@
     return '$' + Math.round(perMillion);
   }
 
+  // Determine price tier based on input price per million tokens
+  function getPriceTier(pricePerToken) {
+    if (!pricePerToken || pricePerToken === '0') return 'free';
+    const perMillion = parseFloat(pricePerToken) * 1_000_000;
+    if (perMillion < 0.50) return 'cheap';      // <$0.50/M
+    if (perMillion < 2.0) return 'mid';         // $0.50-2/M
+    if (perMillion < 5.0) return 'premium';     // $2-5/M
+    return 'frontier';                          // $5+/M
+  }
+
   // Create pricing badge element
   function createBadge(model) {
     const pricing = model.pricing || {};
     const inPrice = formatPrice(pricing.prompt);
     const outPrice = formatPrice(pricing.completion);
-    const isFree = inPrice === 'free' && outPrice === 'free';
+    const tier = getPriceTier(pricing.prompt);
 
     const badge = document.createElement('span');
-    badge.className = 'or-price-badge' + (isFree ? ' free' : '');
+    badge.className = `or-price-badge tier-${tier}`;
     badge.title = `Input: ${inPrice}/M · Output: ${outPrice}/M tokens`;
 
-    if (isFree) {
+    if (tier === 'free') {
       badge.textContent = 'FREE';
     } else {
       // Compact format: $in/$out
