@@ -85,8 +85,12 @@
     const byId = {};
     const bySlug = {};
 
+    // Strip version suffixes: -YYYYMMDD, -MM-DD, -vX.X, etc.
     function stripVersion(str) {
-      return str.replace(/-\d{8}$/, '');
+      return str
+        .replace(/-\d{8}$/, '')      // -20251217
+        .replace(/-\d{2}-\d{2}$/, '') // -04-28
+        .replace(/-v?\d+(\.\d+)*$/, ''); // -v1.0, -1.5
     }
 
     for (const model of models) {
@@ -202,7 +206,10 @@
     if (model) return model;
 
     // Try version-stripped match
-    const slugBase = modelSlug.replace(/-\d{8}$/, '');
+    const slugBase = modelSlug
+      .replace(/-\d{8}$/, '')
+      .replace(/-\d{2}-\d{2}$/, '')
+      .replace(/-v?\d+(\.\d+)*$/, '');
     if (slugBase !== modelSlug) {
       const baseId = `${provider}/${slugBase}`;
       model = pricingData.byId[baseId] || pricingData.byId[baseId.toLowerCase()];
@@ -230,7 +237,8 @@
 
       const badge = createBadge(model);
 
-      // Insert inside simple text links, after complex ones
+      // Insert inside simple text links for better alignment,
+      // after complex ones to avoid breaking their structure
       if (link.children.length === 0) {
         link.appendChild(badge);
       } else {
