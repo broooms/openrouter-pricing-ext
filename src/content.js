@@ -32,6 +32,7 @@
     if (isFree) {
       badge.textContent = 'FREE';
     } else {
+      // Compact format: $in/$out
       badge.innerHTML = `<span class="or-price-in">${inPrice}</span><span class="or-price-sep">/</span><span class="or-price-out">${outPrice}</span>`;
     }
 
@@ -43,9 +44,22 @@
     const byId = {};
     const bySlug = {};
     
+    // Helper to strip version suffixes like -20251217
+    function stripVersion(str) {
+      return str.replace(/-\d{8}$/, '');
+    }
+    
     for (const model of models) {
+      // Index by full ID
       byId[model.id] = model;
       byId[model.id.toLowerCase()] = model;
+      
+      // Index by version-stripped ID
+      const strippedId = stripVersion(model.id);
+      if (strippedId !== model.id) {
+        byId[strippedId] = model;
+        byId[strippedId.toLowerCase()] = model;
+      }
       
       // Also index by just the model name part (without provider)
       const parts = model.id.split('/');
@@ -53,6 +67,13 @@
         const [provider, name] = parts;
         bySlug[name] = model;
         bySlug[name.toLowerCase()] = model;
+        
+        // Index by version-stripped slug
+        const strippedName = stripVersion(name);
+        if (strippedName !== name) {
+          bySlug[strippedName] = model;
+          bySlug[strippedName.toLowerCase()] = model;
+        }
       }
       
       // Index by display name
@@ -165,7 +186,18 @@
       
       // Create and insert badge
       const badge = createBadge(model);
-      link.after(badge);
+      
+      // Try to insert inside the link for better alignment
+      // But only if the link contains just text (not complex markup)
+      const linkChildren = link.children;
+      if (linkChildren.length === 0) {
+        // Simple text link - append inside
+        link.appendChild(badge);
+      } else {
+        // Complex link structure - insert after
+        link.after(badge);
+      }
+      
       link.dataset.orPriced = 'true';
       annotated++;
     });

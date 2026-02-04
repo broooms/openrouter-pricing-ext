@@ -2,21 +2,24 @@
 .or-price-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: ui-monospace, monospace;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #60a5fa;
-  margin-left: 8px;
+  vertical-align: middle;
+  gap: 2px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.15);
+  border: none;
+  color: #93c5fd;
+  margin-left: 6px;
   white-space: nowrap;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .or-price-badge.free {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.15);
   color: #4ade80;
 }
 
@@ -30,6 +33,7 @@
 
 .or-price-badge .or-price-sep {
   color: #6b7280;
+  margin: 0 1px;
 }
 
 /* Tooltip on hover */
@@ -37,10 +41,19 @@
   cursor: help;
 }
 
-/* Dark mode adjustments (OpenRouter is dark by default) */
+/* Subtle hover effect */
+.or-price-badge:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.or-price-badge.free:hover {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+/* Dark mode is default for OpenRouter; light mode fallback */
 @media (prefers-color-scheme: light) {
   .or-price-badge {
-    background: rgba(59, 130, 246, 0.08);
+    background: rgba(59, 130, 246, 0.12);
     color: #2563eb;
   }
   .or-price-badge .or-price-in {
