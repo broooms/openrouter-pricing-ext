@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "OpenRouter Pricing Overlay",
+  "version": "0.1.0",
+  "description": "Shows input/output token costs on OpenRouter rankings and model pages",
+  "permissions": [],
+  "host_permissions": [
+    "https://openrouter.ai/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://openrouter.ai/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
