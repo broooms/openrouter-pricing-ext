@@ -34,7 +34,9 @@ A browser extension that displays token pricing directly on [OpenRouter](https:/
 
 ## Screenshots
 
-*Coming soon*
+![LLM Leaderboard with pricing badges](screenshots/leaderboard.png)
+
+*Pricing badges on the LLM Leaderboard showing color-coded tiers*
 
 ## How It Works
 
