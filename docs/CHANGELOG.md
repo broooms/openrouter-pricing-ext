@@ -14,10 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Smart model matching (exact, case-insensitive, slug-only, version-stripped)
 - LocalStorage caching with 1-hour TTL
 - MutationObserver for SPA navigation support
-- Distinct "FREE" badge styling for zero-cost models
+- Color-coded price tiers:
+  - Free ($0) - Green
+  - Cheap (<$0.50/M) - Blue
+  - Mid ($0.50-$2/M) - Yellow
+  - Premium ($2-$5/M) - Orange
+  - Frontier ($5+/M) - Red
 - Hover tooltips with full price breakdown
 
-### Technical
-- Chrome Manifest V3 compliant
-- No build step required (vanilla JS)
-- Tested on Chrome and Brave browsers
+### Security
+- No innerHTML usage (safe DOM construction)
+- Fetch error handling
+- No data collection or external requests
+- Minimal permissions (only openrouter.ai host permission)

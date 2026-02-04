@@ -1,34 +1,47 @@
 // OpenRouter Pricing Overlay - Content Script
-// Fetches model pricing and injects badges into the page
+// https://github.com/yourusername/openrouter-pricing-ext
 
 (function() {
   'use strict';
 
-  const CACHE_KEY = 'or_pricing_cache';
+  const CACHE_KEY = 'or_pricing_cache_v1';
   const CACHE_TTL = 1000 * 60 * 60; // 1 hour
   let pricingData = null;
 
-  // Format price as $/M tokens
+  /**
+   * Format price as $/M tokens
+   * @param {string|number} pricePerToken - Price per token from API
+   * @returns {string} Formatted price string
+   */
   function formatPrice(pricePerToken) {
     if (!pricePerToken || pricePerToken === '0') return 'free';
     const perMillion = parseFloat(pricePerToken) * 1_000_000;
+    if (isNaN(perMillion)) return '?';
     if (perMillion < 0.01) return '<$0.01';
     if (perMillion < 1) return '$' + perMillion.toFixed(2);
     if (perMillion < 10) return '$' + perMillion.toFixed(1);
     return '$' + Math.round(perMillion);
   }
 
-  // Determine price tier based on input price per million tokens
+  /**
+   * Determine price tier based on input price per million tokens
+   * @param {string|number} pricePerToken - Price per token from API
+   * @returns {string} Tier name: free, cheap, mid, premium, frontier
+   */
   function getPriceTier(pricePerToken) {
     if (!pricePerToken || pricePerToken === '0') return 'free';
     const perMillion = parseFloat(pricePerToken) * 1_000_000;
-    if (perMillion < 0.50) return 'cheap';      // <$0.50/M
-    if (perMillion < 2.0) return 'mid';         // $0.50-2/M
-    if (perMillion < 5.0) return 'premium';     // $2-5/M
-    return 'frontier';                          // $5+/M
+    if (isNaN(perMillion) || perMillion < 0.50) return 'cheap';
+    if (perMillion < 2.0) return 'mid';
+    if (perMillion < 5.0) return 'premium';
+    return 'frontier';
   }
 
-  // Create pricing badge element
+  /**
+   * Create pricing badge element using safe DOM methods
+   * @param {Object} model - Model object with pricing info
+   * @returns {HTMLSpanElement} Badge element
+   */
   function createBadge(model) {
     const pricing = model.pricing || {};
     const inPrice = formatPrice(pricing.prompt);
@@ -42,60 +55,81 @@
     if (tier === 'free') {
       badge.textContent = 'FREE';
     } else {
-      // Compact format: $in/$out
-      badge.innerHTML = `<span class="or-price-in">${inPrice}</span><span class="or-price-sep">/</span><span class="or-price-out">${outPrice}</span>`;
+      // Build DOM safely without innerHTML
+      const inSpan = document.createElement('span');
+      inSpan.className = 'or-price-in';
+      inSpan.textContent = inPrice;
+
+      const sep = document.createElement('span');
+      sep.className = 'or-price-sep';
+      sep.textContent = '/';
+
+      const outSpan = document.createElement('span');
+      outSpan.className = 'or-price-out';
+      outSpan.textContent = outPrice;
+
+      badge.appendChild(inSpan);
+      badge.appendChild(sep);
+      badge.appendChild(outSpan);
     }
 
     return badge;
   }
 
-  // Build lookup tables for flexible model matching
+  /**
+   * Build lookup tables for flexible model matching
+   * @param {Array} models - Array of model objects from API
+   * @returns {Object} Lookup tables { byId, bySlug }
+   */
   function buildLookups(models) {
     const byId = {};
     const bySlug = {};
-    
-    // Helper to strip version suffixes like -20251217
+
     function stripVersion(str) {
       return str.replace(/-\d{8}$/, '');
     }
-    
+
     for (const model of models) {
+      if (!model.id) continue;
+
       // Index by full ID
       byId[model.id] = model;
       byId[model.id.toLowerCase()] = model;
-      
+
       // Index by version-stripped ID
       const strippedId = stripVersion(model.id);
       if (strippedId !== model.id) {
         byId[strippedId] = model;
         byId[strippedId.toLowerCase()] = model;
       }
-      
-      // Also index by just the model name part (without provider)
+
+      // Index by model name part (without provider)
       const parts = model.id.split('/');
       if (parts.length === 2) {
-        const [provider, name] = parts;
+        const [, name] = parts;
         bySlug[name] = model;
         bySlug[name.toLowerCase()] = model;
-        
-        // Index by version-stripped slug
+
         const strippedName = stripVersion(name);
         if (strippedName !== name) {
           bySlug[strippedName] = model;
           bySlug[strippedName.toLowerCase()] = model;
         }
       }
-      
+
       // Index by display name
       if (model.name) {
         bySlug[model.name.toLowerCase()] = model;
       }
     }
-    
+
     return { byId, bySlug };
   }
 
-  // Fetch and cache pricing data
+  /**
+   * Fetch and cache pricing data from OpenRouter API
+   * @returns {Promise<Object>} Pricing data with lookup tables
+   */
   async function fetchPricing() {
     // Check cache first
     const cached = localStorage.getItem(CACHE_KEY);
@@ -103,64 +137,72 @@
       try {
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_TTL && data && data.byId) {
-          console.log('[OR Pricing] Using cached data');
           return data;
         }
       } catch (e) {
-        console.log('[OR Pricing] Cache invalid, fetching fresh');
         localStorage.removeItem(CACHE_KEY);
       }
     }
 
-    console.log('[OR Pricing] Fetching fresh data...');
+    // Fetch fresh data
     const resp = await fetch('https://openrouter.ai/api/v1/models');
+    if (!resp.ok) {
+      throw new Error(`API returned ${resp.status}`);
+    }
+
     const json = await resp.json();
-    
     const models = json.data || [];
     const lookups = buildLookups(models);
-    
     const result = { models, byId: lookups.byId, bySlug: lookups.bySlug };
 
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      data: result,
-      timestamp: Date.now()
-    }));
+    // Cache the result
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data: result,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      // localStorage might be full or disabled; continue without caching
+    }
 
-    console.log('[OR Pricing] Loaded', models.length, 'models');
     return result;
   }
 
-  // Find model from href like /google/gemini-3-flash-preview
+  /**
+   * Find model from href like /google/gemini-3-flash-preview
+   * @param {string} href - Link href attribute
+   * @returns {Object|null} Model object or null
+   */
   function findModelFromHref(href) {
     if (!href || !pricingData || !pricingData.byId) return null;
-    
-    // Match /<provider>/<model-name> pattern
+
     const match = href.match(/^\/([a-z0-9_-]+)\/([a-z0-9._-]+)/i);
     if (!match) return null;
-    
+
     const [, provider, modelSlug] = match;
-    
+
     // Skip non-model pages
-    const skipPaths = ['docs', 'chat', 'models', 'rankings', 'pricing', 'apps', 
-                       'settings', 'keys', 'activity', 'credits', 'api', 'providers',
-                       'about', 'announcements', 'careers', 'partners', 'privacy',
-                       'terms', 'support', 'enterprise', 'sdk'];
+    const skipPaths = [
+      'docs', 'chat', 'models', 'rankings', 'pricing', 'apps',
+      'settings', 'keys', 'activity', 'credits', 'api', 'providers',
+      'about', 'announcements', 'careers', 'partners', 'privacy',
+      'terms', 'support', 'enterprise', 'sdk'
+    ];
     if (skipPaths.includes(provider.toLowerCase())) {
       return null;
     }
-    
-    // Try exact match first
+
+    // Try exact match
     const modelId = `${provider}/${modelSlug}`;
     let model = pricingData.byId[modelId] || pricingData.byId[modelId.toLowerCase()];
     if (model) return model;
-    
+
     // Try slug-only match
     model = pricingData.bySlug[modelSlug] || pricingData.bySlug[modelSlug.toLowerCase()];
     if (model) return model;
-    
-    // Try partial match (model slug might have version suffix not in our data)
-    // e.g., "gemini-3-flash-preview-20251217" vs "gemini-3-flash-preview"
-    const slugBase = modelSlug.replace(/-\d{8}$/, ''); // Remove date suffix like -20251217
+
+    // Try version-stripped match
+    const slugBase = modelSlug.replace(/-\d{8}$/, '');
     if (slugBase !== modelSlug) {
       const baseId = `${provider}/${slugBase}`;
       model = pricingData.byId[baseId] || pricingData.byId[baseId.toLowerCase()];
@@ -168,59 +210,43 @@
       model = pricingData.bySlug[slugBase] || pricingData.bySlug[slugBase.toLowerCase()];
       if (model) return model;
     }
-    
+
     return null;
   }
 
-  // Find and annotate model elements
+  /**
+   * Find and annotate model elements on the page
+   */
   function annotateModels() {
-    if (!pricingData || !pricingData.byId) {
-      console.log('[OR Pricing] No pricing data available');
-      return;
-    }
+    if (!pricingData || !pricingData.byId) return;
 
-    let annotated = 0;
-    
-    // Find all links that might be model links
     document.querySelectorAll('a[href^="/"]').forEach(link => {
-      // Skip if already processed
       if (link.querySelector('.or-price-badge')) return;
       if (link.dataset.orPriced === 'true') return;
-      
+
       const href = link.getAttribute('href');
       const model = findModelFromHref(href);
-      
-      if (!model) {
-        return;
-      }
-      
-      // Create and insert badge
+      if (!model) return;
+
       const badge = createBadge(model);
-      
-      // Try to insert inside the link for better alignment
-      // But only if the link contains just text (not complex markup)
-      const linkChildren = link.children;
-      if (linkChildren.length === 0) {
-        // Simple text link - append inside
+
+      // Insert inside simple text links, after complex ones
+      if (link.children.length === 0) {
         link.appendChild(badge);
       } else {
-        // Complex link structure - insert after
         link.after(badge);
       }
-      
+
       link.dataset.orPriced = 'true';
-      annotated++;
     });
-    
-    if (annotated > 0) {
-      console.log('[OR Pricing] Annotated', annotated, 'models');
-    }
   }
 
-  // Observe DOM changes for SPA navigation
+  /**
+   * Observe DOM changes for SPA navigation
+   */
   function observeChanges() {
     let timeout;
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver(() => {
       clearTimeout(timeout);
       timeout = setTimeout(annotateModels, 200);
     });
@@ -231,23 +257,20 @@
     });
   }
 
-  // Initialize
+  /**
+   * Initialize the extension
+   */
   async function init() {
     try {
-      // Clear old cache to force fresh fetch (for debugging)
-      localStorage.removeItem(CACHE_KEY);
-      
       pricingData = await fetchPricing();
-      console.log('[OR Pricing] Data loaded, byId keys:', Object.keys(pricingData.byId).length);
       annotateModels();
       observeChanges();
-      console.log('[OR Pricing] Initialized successfully');
     } catch (err) {
-      console.error('[OR Pricing] Init failed:', err);
+      // Silently fail - extension is non-critical
     }
   }
 
-  // Wait for page load
+  // Start when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
