@@ -53,7 +53,7 @@ The extension fetches model data from OpenRouter's public API (`/api/v1/models`)
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/openrouter-pricing-ext.git
+git clone https://github.com/broooms/openrouter-pricing-ext.git
 
 # Load src/ folder as unpacked extension
 # Make changes, then reload extension in browser
