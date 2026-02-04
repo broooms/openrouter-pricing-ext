@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-04
+
+### Fixed
+- Model matching for URLs with `-MM-DD` date suffixes (e.g., `qwen3-32b-04-28`)
+- Model matching for URLs with version suffixes (e.g., `-v1.0`)
+- Version-stripped lookups now work in both directions
+
+### Changed
+- New extension icon (dark background, blue dollar sign, price arrows)
+- Added 16px icon for browser toolbar
+
 ## [0.1.0] - 2026-02-04
 
 ### Added

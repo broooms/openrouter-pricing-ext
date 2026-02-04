@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenRouter Pricing Overlay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Displays token costs (input/output per million) directly on OpenRouter model listings with color-coded price tiers.",
   "permissions": [],
   "host_permissions": [
